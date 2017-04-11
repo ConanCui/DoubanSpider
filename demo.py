@@ -14,6 +14,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 
 
+
 def BrowserHeaders():
     head = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/' \
            '537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36'
@@ -23,11 +24,14 @@ def BrowserHeaders():
 
 def GetTag():
     BaseUrl = 'https://movie.douban.com/tag/'
+    # BaseUrl = 'http://blog.csdn.net/shanzhizi/article/details/50903748'
     headers = BrowserHeaders()
     try:
-        request = urllib2.Request(BaseUrl)
+        request = urllib2.Request(BaseUrl, headers=headers)
         response = urllib2.urlopen(request)
         soup = BeautifulSoup(response, "lxml")
+        # response = requests.get(BaseUrl,headers = headers)
+        # soup = BeautifulSoup(response.text, 'lxml')
     except Exception, e:
         print "maybe blocked!"
         return False
@@ -75,11 +79,11 @@ def GetComments(Film, TagName):
     :param urlComments: movie'url in pangeNumber in movie type and movie id
     :return:
     '''
-    global movieName2ID,movieID, useName2ID, userID
+    global movieName2ID, movieID, useName2ID, userID
     commentcomplete = []
     urlComments, movieName = Film
 
-    #获取movieID_
+    # 获取movieID_
     if not (movieName2ID.has_key(movieName)):
         movieID = movieID + 1
         movieName2ID.update({movieName: movieID})
@@ -90,10 +94,10 @@ def GetComments(Film, TagName):
     headers = BrowserHeaders()
     nextpage = "comments?start={commentNum}&limit=20&sort=new_score"
 
-    #爬取10页评论
+    # 爬取10页评论
     for commentPages in range(1):
         begin_page = time.time()
-        # time.sleep(2)
+        time.sleep(2)
         pageNum = commentPages * 20
         SingleCommentsPage = nextpage.format(commentNum=pageNum)
 
@@ -106,14 +110,14 @@ def GetComments(Film, TagName):
             print ("        maybe blocked or the movie: %s don't has so many comments!" % (movieName))
             return False
 
-        #获取每页的所有评论
+        # 获取每页的所有评论
         for commentsDetail in commentSoup.find_all('div', {'class': 'comment'}):
             # get rate
             rate = re.search(r'<span class="allstar(.*?) rating" title=".*?"></span>.*?', str(commentsDetail))
             if rate != None:
                 rate = rate.group(1)
 
-            #获取每条评论的userID_
+            # 获取每条评论的userID_
             userName = re.search(r'<a class=.*?href="https.*?">(.*?)</a>.*?', str(commentsDetail))
             if userName != None:
                 userName = userName.group(1)
@@ -124,7 +128,7 @@ def GetComments(Film, TagName):
             else:
                 userID_ = useName2ID[userName]
 
-            #将movieID_, movieName, userID_, userName, rate, TagName写入csv
+            # 将movieID_, movieName, userID_, userName, rate, TagName写入csv
             item = [movieID_, movieName, userID_, userName, rate, TagName]
             commentcomplete.append(item)
             Writecsv(commentcomplete)
@@ -132,8 +136,7 @@ def GetComments(Film, TagName):
 
         end_page = time.time()
         print ("        crawling comment page%d in movie: %d %s userID: %d , and time is %f..." % (
-        commentPages + 1, movieID_, movieName, userID_, end_page - begin_page))
-
+            commentPages + 1, movieID_, movieName, userID_, end_page - begin_page))
 
 
 def Writecsv(commentcomplete):
@@ -144,7 +147,7 @@ def Writecsv(commentcomplete):
     csvfile.close()
 
 
-global movieID, useName2ID,movieName2ID, userID
+global movieID, useName2ID, movieName2ID, userID
 useName2ID = {}
 movieName2ID = {}
 movieID = 0
